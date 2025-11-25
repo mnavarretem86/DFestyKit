@@ -1,9 +1,8 @@
 FROM ubuntu:22.04
 
-# Variables
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Actualizar paquetes
+# Instalar dependencias
 RUN apt-get update && apt-get install -y \
     apache2 \
     php \
@@ -23,20 +22,18 @@ RUN apt-get update && apt-get install -y \
 RUN wget https://wordpress.org/latest.zip && \
     unzip latest.zip && \
     mv wordpress/* /var/www/html/ && \
-    rm -rf wordpress latest.zip
+    rm -rf latest.zip wordpress
 
-# Configurar permisos
+# Eliminar la página por defecto de Apache
+RUN rm -f /var/www/html/index.html
+
+# Permisos correctos
 RUN chown -R www-data:www-data /var/www/html
 
-# Inicializar base de datos MariaDB
-RUN service mariadb start && \
-    mysql -u root -e "CREATE DATABASE wordpress;" && \
-    mysql -u root -e "CREATE USER 'wpuser'@'localhost' IDENTIFIED BY 'wppass';" && \
-    mysql -u root -e "GRANT ALL PRIVILEGES ON wordpress.* TO 'wpuser'@'localhost';" && \
-    mysql -u root -e "FLUSH PRIVILEGES;"
+# Copiar script de inicio
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
 
-# Exponer port 80
 EXPOSE 80
 
-# Script de inicio
-CMD service mariadb start && apachectl -D FOREGROUND
+CMD ["/start.sh"]
