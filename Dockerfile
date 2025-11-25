@@ -16,22 +16,29 @@ RUN apt-get update && apt-get install -y \
     php-zip \
     php-soap \
     php-intl \
+    libapache2-mod-php \
     mariadb-server \
     wget \
-    unzip
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
 
 # ---------------------------
 # DESCARGAR WORDPRESS
 # ---------------------------
-RUN wget https://wordpress.org/latest.zip && \
+RUN rm -rf /var/www/html/* && \
+    wget https://wordpress.org/latest.zip && \
     unzip latest.zip && \
     mv wordpress/* /var/www/html/ && \
     rm -rf latest.zip wordpress
 
 # ---------------------------
-# BORRAR PÁGINA POR DEFECTO DE APACHE
+# SOLUCIÓN AL CONTENIDO MIXTO (HTTPS EN RENDER)
 # ---------------------------
-RUN rm -f /var/www/html/index.html
+# Creamos un .htaccess inicial para que Apache reconozca el proxy SSL de Render.
+# Esto fuerza a WordPress a generar URLs con HTTPS durante la instalación.
+RUN echo '<IfModule mod_setenvif.c>' > /var/www/html/.htaccess && \
+    echo '  SetEnvIf X-Forwarded-Proto "^https$" HTTPS=on' >> /var/www/html/.htaccess && \
+    echo '</IfModule>' >> /var/www/html/.htaccess
 
 # ---------------------------
 # ACTIVAR MÓDULOS NECESARIOS DE APACHE
@@ -39,8 +46,10 @@ RUN rm -f /var/www/html/index.html
 RUN a2enmod rewrite
 RUN a2enmod dir
 RUN a2enmod mime
+RUN a2enmod headers
 
 # PERMITIR .htaccess Y URLs BONITAS
+# Es importante que esto se ejecute para que el .htaccess creado arriba funcione.
 RUN sed -i "s/AllowOverride None/AllowOverride All/g" /etc/apache2/apache2.conf
 
 # ---------------------------
