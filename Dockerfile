@@ -2,7 +2,9 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Instalar dependencias
+# ---------------------------
+# INSTALAR DEPENDENCIAS
+# ---------------------------
 RUN apt-get update && apt-get install -y \
     apache2 \
     php \
@@ -18,19 +20,37 @@ RUN apt-get update && apt-get install -y \
     wget \
     unzip
 
-# Descargar WordPress
+# ---------------------------
+# DESCARGAR WORDPRESS
+# ---------------------------
 RUN wget https://wordpress.org/latest.zip && \
     unzip latest.zip && \
     mv wordpress/* /var/www/html/ && \
     rm -rf latest.zip wordpress
 
-# Eliminar la página por defecto de Apache
+# ---------------------------
+# BORRAR PÁGINA POR DEFECTO DE APACHE
+# ---------------------------
 RUN rm -f /var/www/html/index.html
 
-# Permisos correctos
+# ---------------------------
+# ACTIVAR MÓDULOS NECESARIOS DE APACHE
+# ---------------------------
+RUN a2enmod rewrite
+RUN a2enmod dir
+RUN a2enmod mime
+
+# PERMITIR .htaccess Y URLs BONITAS
+RUN sed -i "s/AllowOverride None/AllowOverride All/g" /etc/apache2/apache2.conf
+
+# ---------------------------
+# PERMISOS CORRECTOS
+# ---------------------------
 RUN chown -R www-data:www-data /var/www/html
 
-# Copiar script de inicio
+# ---------------------------
+# COPIAR SCRIPT DE INICIO
+# ---------------------------
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
