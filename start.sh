@@ -3,7 +3,7 @@
 # Iniciar MariaDB
 service mariadb start
 
-# Crear base de datos y usuario
+# Crear base de datos y usuario si no existen
 mysql -u root -e "CREATE DATABASE IF NOT EXISTS wordpress;"
 mysql -u root -e "CREATE USER IF NOT EXISTS 'wpuser'@'localhost' IDENTIFIED BY 'wppass';"
 mysql -u root -e "GRANT ALL PRIVILEGES ON wordpress.* TO 'wpuser'@'localhost';"
