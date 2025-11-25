@@ -2,9 +2,6 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# ---------------------------
-# INSTALAR DEPENDENCIAS
-# ---------------------------
 RUN apt-get update && apt-get install -y \
     apache2 \
     php \
@@ -20,40 +17,32 @@ RUN apt-get update && apt-get install -y \
     wget \
     unzip
 
-# ---------------------------
-# DESCARGAR WORDPRESS
-# ---------------------------
+# Descargar WordPress
 RUN wget https://wordpress.org/latest.zip && \
     unzip latest.zip && \
     mv wordpress/* /var/www/html/ && \
     rm -rf latest.zip wordpress
 
-# ---------------------------
-# BORRAR PÁGINA POR DEFECTO DE APACHE
-# ---------------------------
+# Borrar página por defecto
 RUN rm -f /var/www/html/index.html
 
-# ---------------------------
-# ACTIVAR MÓDULOS NECESARIOS DE APACHE
-# ---------------------------
+# Activar módulos necesarios
 RUN a2enmod rewrite
 RUN a2enmod dir
 RUN a2enmod mime
 
-# PERMITIR .htaccess Y URLs BONITAS
+# Permitir .htaccess
 RUN sed -i "s/AllowOverride None/AllowOverride All/g" /etc/apache2/apache2.conf
 
-# ---------------------------
-# PERMISOS CORRECTOS
-# ---------------------------
+# Crear .htaccess con FORCE HTTPS
+RUN echo "<IfModule mod_rewrite.c>" > /var/www/html/.htaccess && \
+    echo "RewriteEngine On" >> /var/www/html/.htaccess && \
+    echo "RewriteCond %{HTTPS} !=on" >> /var/www/html/.htaccess && \
+    echo "RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]" >> /var/www/html/.htaccess && \
+    echo "</IfModule>" >> /var/www/html/.htaccess
+
 RUN chown -R www-data:www-data /var/www/html
 
-# Crear un wp-config.php válido con apertura PHP
-RUN echo "<?php\n" > /var/www/html/wp-config.php
-
-# ---------------------------
-# COPIAR SCRIPT DE INICIO
-# ---------------------------
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
