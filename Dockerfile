@@ -48,6 +48,9 @@ RUN sed -i "s/AllowOverride None/AllowOverride All/g" /etc/apache2/apache2.conf
 # ---------------------------
 RUN chown -R www-data:www-data /var/www/html
 
+# Crear wp-config vacío para completar HTTPS fix
+RUN touch /var/www/html/wp-config.php
+
 # ---------------------------
 # COPIAR SCRIPT DE INICIO
 # ---------------------------
